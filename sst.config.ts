@@ -4,7 +4,7 @@ import { SiteStack } from '@/stacks/SiteStack'
 export default {
   config(_input) {
     return {
-      name: 'upload',
+      name: 'aws-upload',
       region: 'us-east-1',
     }
   },
