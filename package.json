@@ -10,7 +10,12 @@
     "deploy": "sst deploy --stage prod",
     "clean-deploy": "sst remove --stage prod",
     "build": "next build",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier . --write",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.382.0",
@@ -46,6 +51,9 @@
     "@types/aws-lambda": "^8.10.119",
     "aws-cdk-lib": "2.84.0",
     "constructs": "10.1.156",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
+    "prettier": "3.0.1",
     "sst": "^2.22.11"
   }
 }
