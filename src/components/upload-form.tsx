@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Loader2 } from 'lucide-react';
 
 import { Button } from "./ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
@@ -9,13 +10,15 @@ import { Input } from "./ui/input";
 
 import * as z from "zod";
 import FileInput from "./file-input";
+import { getSignedUploadUrl } from "@/lib/getSignedUrl";
+import { uploadFile } from "@/lib/uploadFile";
 
 const formSchema = z.object({
   text: z.string().min(1, { message: "Please input some text." }),
   file: z.any().refine(file => file instanceof File, "Please upload a plain text file.")
 })
 
-export default function UploadForm({ putUrl }: { putUrl: string }) {
+export default function UploadForm({ bucketName, apiUrl }: { bucketName: string, apiUrl: string }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -23,21 +26,22 @@ export default function UploadForm({ putUrl }: { putUrl: string }) {
       file: "",
     }
   })
+  const { isSubmitting } = form.formState;
 
-  // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const { text, file } = values;
-    const response = await fetch(putUrl, {
-      body: file,
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-        "Content-Disposition": `attachment; filename="${file.name}"`,
-      },
-    });
+    const uploadUrl = await getSignedUploadUrl({ fileName: file.name, bucketName })
+    await uploadFile({ url: uploadUrl, file })
 
-    console.log({ text, response })
+    const data = {
+      input_text: text,
+      input_file_path: `${bucketName}/${file.name}`
+    }
 
+    await fetch(`${apiUrl}/files`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
   }
 
   return (
@@ -70,7 +74,15 @@ export default function UploadForm({ putUrl }: { putUrl: string }) {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ?
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Please wait
+            </>
+            : "Submit"
+          }
+        </Button>
       </form>
     </Form>
   )

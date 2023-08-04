@@ -6,13 +6,14 @@ export function SiteStack({ stack }: StackContext) {
     fields: {
       id: "string",
       input_text: "string",
-      input_file_path: "string"
+      input_file_path: "string",
+      output_file_path: "string"
     },
     primaryIndex: { partitionKey: "id" },
   });
 
   // Create the HTTP API
-  const api = new Api(stack, "api", {
+  const api = new Api(stack, "Api", {
     defaults: {
       function: {
         // Bind the table name to our API
@@ -20,7 +21,8 @@ export function SiteStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "POST /upload": "src/functions/upload.main",
+      "POST /files": "src/functions/files.createFile",
+      "PUT /files/{id}": "src/functions/files.updateFile",
     },
   });
 
@@ -29,7 +31,7 @@ export function SiteStack({ stack }: StackContext) {
 
   // Deploy our Next.js app
   const site = new NextjsSite(stack, "Site", {
-    bind: [bucket]
+    bind: [bucket, api]
   });
 
   // Show the URLs in the output

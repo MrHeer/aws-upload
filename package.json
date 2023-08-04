@@ -4,12 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "sst bind next dev",
+    "sst-dev": "sst dev",
+    "sst-console": "sst console",
+    "clean": "sst remove",
+    "deploy": "sst deploy --stage prod",
+    "clean-deploy": "sst remove --stage prod",
     "build": "next build",
-    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.382.0",
     "@aws-sdk/client-s3": "^3.383.0",
+    "@aws-sdk/lib-dynamodb": "^3.382.0",
     "@aws-sdk/s3-request-presigner": "^3.383.0",
     "@hookform/resolvers": "^3.1.1",
     "@radix-ui/react-label": "^2.0.2",
@@ -22,6 +28,7 @@
     "clsx": "^2.0.0",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
+    "http-status": "^1.6.2",
     "lucide-react": "^0.263.1",
     "nanoid": "^4.0.2",
     "next": "13.4.12",
