@@ -5,6 +5,7 @@ import {
   Bucket,
   NextjsSite,
   Job,
+  // Cognito,
 } from 'sst/constructs'
 import { SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2'
 
@@ -18,12 +19,13 @@ export function SiteStack({ stack }: StackContext) {
       output_file_path: 'string',
     },
     primaryIndex: { partitionKey: 'id' },
-    stream: 'new_image',
+    stream: true,
   })
 
   // Create the HTTP API
   const api = new Api(stack, 'Api', {
     defaults: {
+      // authorizer: "iam",
       function: {
         // Bind the table name to our API
         bind: [table],
@@ -34,6 +36,14 @@ export function SiteStack({ stack }: StackContext) {
       'PUT /files/{id}': 'src/functions/files.updateFile',
     },
   })
+
+  // // Create auth provider
+  // const auth = new Cognito(stack, "Auth", {
+  //   login: ["email"],
+  // });
+
+  // // Allow authenticated users invoke API
+  // auth.attachPermissionsForAuthUsers(stack, [api]);
 
   // Create the Bucket
   const bucket = new Bucket(stack, 'Uploads')
@@ -55,6 +65,12 @@ export function SiteStack({ stack }: StackContext) {
         handler: 'src/consumers/fileCreate.main',
         bind: [job],
       },
+      // https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax
+      filters: [
+        {
+          eventName: ['INSERT'],
+        },
+      ],
     },
   })
 
@@ -67,5 +83,8 @@ export function SiteStack({ stack }: StackContext) {
   stack.addOutputs({
     SiteUrl: site.url,
     ApiEndpoint: api.url,
+    // UserPoolId: auth.userPoolId,
+    // UserPoolClientId: auth.userPoolClientId,
+    // IdentityPoolId: auth.cognitoIdentityPoolId,
   })
 }
