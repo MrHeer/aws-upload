@@ -1,4 +1,12 @@
-import { Api, Table, StackContext, Bucket, NextjsSite } from 'sst/constructs'
+import {
+  Api,
+  Table,
+  StackContext,
+  Bucket,
+  NextjsSite,
+  Job,
+} from 'sst/constructs'
+import { SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2'
 
 export function SiteStack({ stack }: StackContext) {
   // Create the table
@@ -10,6 +18,7 @@ export function SiteStack({ stack }: StackContext) {
       output_file_path: 'string',
     },
     primaryIndex: { partitionKey: 'id' },
+    stream: 'new_image',
   })
 
   // Create the HTTP API
@@ -28,6 +37,26 @@ export function SiteStack({ stack }: StackContext) {
 
   // Create the Bucket
   const bucket = new Bucket(stack, 'Uploads')
+
+  const vpc = new Vpc(stack, 'VPC')
+
+  const job = new Job(stack, 'FileAppendJob', {
+    handler: 'src/jobs/fileAppend.main',
+    bind: [table, bucket],
+    cdk: {
+      vpc,
+      vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+    },
+  })
+
+  table.addConsumers(stack, {
+    onFileCreate: {
+      function: {
+        handler: 'src/consumers/fileCreate.main',
+        bind: [job],
+      },
+    },
+  })
 
   // Deploy our Next.js app
   const site = new NextjsSite(stack, 'Site', {

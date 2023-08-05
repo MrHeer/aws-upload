@@ -6,7 +6,7 @@ import {
 } from '@aws-sdk/lib-dynamodb'
 import { nanoid } from 'nanoid'
 import { Table } from 'sst/node/table'
-import { ApiHandler } from 'sst/node/api'
+import { ApiHandler, useJsonBody, usePathParam } from 'sst/node/api'
 import HttpStatus from 'http-status'
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}))
@@ -14,7 +14,7 @@ const db = DynamoDBDocumentClient.from(new DynamoDBClient({}))
 export const createFile = ApiHandler(async (event) => {
   if (event.body === undefined) return { statusCode: HttpStatus['BAD_REQUEST'] }
 
-  const data = JSON.parse(event.body)
+  const data = useJsonBody()
   const item = {
     id: nanoid(), // A unique uuid
     ...data,
@@ -34,7 +34,7 @@ export const createFile = ApiHandler(async (event) => {
 })
 
 export const updateFile = ApiHandler(async (event) => {
-  const id = event.pathParameters?.id
+  const id = usePathParam('id')
   if (event.body === undefined || id === undefined)
     return { statusCode: HttpStatus['BAD_REQUEST'] }
 
